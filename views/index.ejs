@@ -43,12 +43,12 @@
                                 <label class="form-label" for="name">Message</label>
                                 <input class="form-control" type="text" id="name-2" name="name" required=""></div>
                             <div class="mb-3">
-                                <label class="form-label" for="subject">Encryption Type</label>
+                                <label class="form-label" for="EncryptionType">Encryption Type</label>
                                 <div class="dropdown">
-                                    <button class="btn btn-light dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown" type="button">
-                                        select encryption type
+                                    <button class="btn btn-light dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown" type="button" id="dropdownEncryptBtn">
+                                        Encryption type
                                     </button>
-                                    <div class="dropdown-menu">
+                                    <div class="dropdown-menu" id="encryptionDropdown">
                                         <a class="dropdown-item" href="#" data-value="AES">AES</a>
                                         <a class="dropdown-item" href="#" data-value="DSA">DSA</a>
                                         <a class="dropdown-item" href="#" data-value="RSA">RSA</a>
@@ -56,9 +56,13 @@
                                 </div>
                                 <input type="hidden" name="encryptionType" id="encryptionType">
                             </div>
-                            <div class="mb-3"><label class="form-label" for="email">Encryption Key tama ba</label><input class="form-control" type="text" data-bs-toggle="tooltip" data-bss-tooltip="" data-bs-placement="left" id="name-3" name="encryptKey" placeholder="enter encryption key" title="lagay tip dito"></div>
-                            <div class="mb-3"></div>
-                            <div class="mb-3"><button class="btn btn-success" type="submit">Encrypt</button></div><label class="form-label" for="email">Results</label><textarea class="form-control" readonly="" title="asdasdw" placeholder="Result goes here"></textarea>
+                            <div class="mb-3"><label class="form-label" for="email">Encryption Key tama ba</label>
+                                <input class="form-control" type="text" data-bs-toggle="tooltip" data-bss-tooltip="" data-bs-placement="left" id="name-3" name="encryptKey" placeholder="enter encryption key" title="lagay tip dito">
+                            </div>
+                            <div class="mb-3"><button class="btn btn-success" type="submit">Encrypt</button>
+                            </div>
+                            <label class="form-label" for="email">Results</label>
+                            <textarea class="form-control" readonly="" title="asdasdw" placeholder="Result goes here"></textarea>
                         </form>
                     </div>
                     <div class="col-md-6">
@@ -66,21 +70,28 @@
                             <div class="text-center mb-3">
                                 <h4>Decryption</h4>
                             </div>
-                            <div class="mb-3"><label class="form-label" for="name">Encrypted Message</label><input class="form-control" type="text" id="name-4" name="name" required=""></div>
-                            <div class="mb-3"><label class="form-label" for="subject">Decryption Type</label>
+                            <div class="mb-3">
+                                <label class="form-label" for="name">Encrypted Message</label>
+                                <input class="form-control" type="text" id="name-4" name="name" required="">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="decryptionType">Decryption Type</label>
                                 <div class="dropdown">
-                                    <button class="btn btn-light dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown" type="button">
-                                        select decryption type
+                                    <button class="btn btn-light dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown" type="button" id="dropdownDecryptBtn">
+                                        Decryption type
                                     </button>
-                                    <div class="dropdown-menu">
+                                    <div class="dropdown-menu" id="decryptionDropdown">
                                         <a class="dropdown-item" href="#" data-value="AES">AES</a>
                                         <a class="dropdown-item" href="#" data-value="DSA">DSA</a>
                                         <a class="dropdown-item" href="#" data-value="RSA">RSA</a>
                                     </div>
                                 </div>
+                                <input type="hidden" name="decryptionType" id="decryptionType">
                             </div>
-                            <div class="mb-3"><label class="form-label" for="email">Decryption Key</label><input class="form-control" type="text" data-bs-toggle="tooltip" data-bss-tooltip="" data-bs-placement="right" id="name-5" name="decryptKey" placeholder="enter decryption key" title="lagay tip dito1"></div>
-                            <div class="mb-3"></div>
+                            <div class="mb-3">
+                                <label class="form-label" for="email">Decryption Key</label>
+                                <input class="form-control" type="text" data-bs-toggle="tooltip" data-bss-tooltip="" data-bs-placement="right" id="name-5" name="decryptKey" placeholder="enter decryption key" title="lagay tip dito1">
+                            </div>
                             <div class="mb-3"><button class="btn btn-success" type="submit">Decrypt</button></div><label class="form-label" for="email">Results</label><textarea class="form-control" readonly="" placeholder="Decrypted result goes here"></textarea>
                         </form>
                     </div>

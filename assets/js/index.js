@@ -1,47 +1,82 @@
 console.log("gasdasda")
 
-document.addEventListener('DOMContentLoaded', function() {
-    const dropdownItems = document.querySelectorAll('.dropdown-item');
-    const dropdownToggle = document.querySelector('.dropdown-toggle');
-    const encryptionTypeInput = document.getElementById('encryptionType');
+document.addEventListener('DOMContentLoaded', function () {
+    const encryptionDropdownItems = document.querySelectorAll('#encryptionDropdown .dropdown-item');
+    const decryptionDropdownItems = document.querySelectorAll('#decryptionDropdown .dropdown-item');
+    const encryptionDropdownToggle = document.querySelector('#dropdownEncryptBtn');
+    const decryptionDropdownToggle = document.querySelector('#dropdownDecryptBtn');
+    const encryptionHiddenInput = document.getElementById('encryptionType');
+    const decryptionHiddenInput = document.getElementById('decryptionType');
 
-    dropdownItems.forEach(item => {
-        item.addEventListener('click', function() {
-            dropdownToggle.textContent = this.textContent;
-            encryptionTypeInput.value = this.getAttribute('data-value');
+    encryptionDropdownItems.forEach(item => {
+        item.addEventListener('click', function () {
+            encryptionDropdownToggle.textContent = this.textContent.trim();
+            console.log("ENCRYPTION DROPDOWN: "+this.getAttribute('data-value'));
+            encryptionHiddenInput.value = this.getAttribute('data-value');
         });
     });
 
-// form
-    const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
+    decryptionDropdownItems.forEach(item => {
+        item.addEventListener('click', function () {
+            decryptionDropdownToggle.textContent = this.textContent.trim();
+            console.log("DECRYPTION DROPDOWN: "+this.getAttribute('data-value'));
+            decryptionHiddenInput.value = this.getAttribute('data-value');
+        });
+    });
+
+    //ENCRYPTION FORM
+    const encryptionForm = document.querySelector('form[action="/encrypt"]');
+    encryptionForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
         const message = document.getElementById('name-2').value;
-        const encryptionType = dropdownToggle.textContent;
+        const encryptionType = encryptionHiddenInput.value;
         const encryptKey = document.getElementById('name-3').value;
-        console.log(message);
-        console.log(encryptionType);
-        console.log(encryptKey);
 
         const formData = new URLSearchParams();
         formData.append('message', message);
         formData.append('encryptionType', encryptionType);
         formData.append('encryptKey', encryptKey);
 
-        console.log(formData);
-
         fetch('/encrypt', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString()
+            body: formData.toString(),
         })
-        .then(response => response.json())
-        .then(data => {
-            document.querySelector('textarea').value = data.encryptedMessage;
+            .then((response) => response.json())
+            .then((data) => {
+                encryptionForm.querySelector('textarea').value = data.encryptedMessage;
+            })
+            .catch(() => {
+                alert('Encryption failed');
+            });
+    });
+
+    //DECRYPT FORM
+    const decryptionForm = document.querySelector('form:not([action])');
+    decryptionForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const encryptedMessage = document.getElementById('name-4').value;
+        const decryptionType = decryptionHiddenInput.value;
+        const decryptKey = document.getElementById('name-5').value;
+
+        const formData = new URLSearchParams();
+        formData.append('encryptedMessage', encryptedMessage);
+        formData.append('decryptionType', decryptionType);
+        formData.append('decryptKey', decryptKey);
+
+        fetch('/decrypt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString(),
         })
-        .catch(() => {
-            alert('encryption failed');
-        });
+            .then((response) => response.json())
+            .then((data) => {
+                decryptionForm.querySelector('textarea').value = data.decryptedMessage;
+            })
+            .catch(() => {
+                alert('Decryption failed');
+            });
     });
 });

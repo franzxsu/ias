@@ -39,9 +39,29 @@ router.get('/', (req, res) => {
       console.log(encryptKey);
       return res.status(400).json({ error: 'missing fields' });
   }
-    const encryptedMessage = `testasdasd ${message} ${encryptionType} key- ${encryptKey}`;
-
+    const encryptedMessage = `testencryption ${message} ${encryptionType} key- ${encryptKey}`;
+    console.log(encryptedMessage);
     res.json({ encryptedMessage });
+});
+
+router.post('/decrypt', (req, res) => {
+
+  const { 
+    encryptedMessage, 
+    decryptionType, 
+    decryptKey 
+  } = req.body;
+  console.log(req.body);
+  if (!encryptedMessage || !decryptionType || !decryptKey) {
+    console.log("missing decrypt field");
+    console.log(message);
+    console.log(decryptionType);
+    console.log(decryptKey);
+    return res.status(400).json({ error: 'missing fields' });
+}
+  const decryptedMessage = `testdecryption ${encryptedMessage} ${decryptionType} key- ${decryptKey}`;
+  console.log(decryptedMessage);
+  res.json({ decryptedMessage });
 });
 
 module.exports = router;
