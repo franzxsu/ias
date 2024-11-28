@@ -14,7 +14,7 @@ Follow the steps below to set up and run the application:
 Clone this repository to your local machine using the following command:
 
 ```bash
-git clone https://github.com/yourusername/your-repository-name.git
+git clone https://github.com/franzxsu/ias.git
 ```
 
 ### 2. Set up dependencies
