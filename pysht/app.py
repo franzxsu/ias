@@ -99,7 +99,7 @@ elif mode == "RSA Encryption/Decryption":
 
 # AES Section
 elif mode == "AES Encryption/Decryption":
-    st.header("🔑 AES Encryption & Decryption")
+    st.header("AES Encryption & Decryption")
 
     if st.button("Generate AES Key"):
         aes_key = os.urandom(32)
