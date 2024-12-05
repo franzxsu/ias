@@ -101,38 +101,44 @@ elif mode == "RSA Encryption/Decryption":
 elif mode == "AES Encryption/Decryption":
     st.header("AES Encryption & Decryption")
 
-    if st.button("Generate AES Key"):
-        aes_key = os.urandom(32)
-        st.session_state['aes_key'] = aes_key
-        st.success("AES key generated successfully!")
-        st.write("AES Key (hex):", aes_key.hex())
+    # Generate AES Key
+    if 'aes_key' not in st.session_state:  # Check if key already exists
+        if st.button("Generate AES Key"):
+            aes_key = os.urandom(32)
+            st.session_state['aes_key'] = aes_key
+            st.success("AES key generated successfully!")
+    
+    # Display AES Key permanently if it exists in session state
+    if 'aes_key' in st.session_state:
+        st.write("**AES Key (hex):**", st.session_state['aes_key'].hex())
 
-    # Encryption
+    # Input for encryption
     aes_plaintext = st.text_area("Enter plaintext for AES encryption:")
-    if st.button("Encrypt with AES"):
+
+    if st.button("Encrypt using AES"):
         if 'aes_key' in st.session_state:
-            iv = os.urandom(16)
+            iv = os.urandom(16)  # Initialization Vector
             cipher = Cipher(algorithms.AES(st.session_state['aes_key']), modes.CFB(iv))
             encryptor = cipher.encryptor()
             ciphertext = encryptor.update(aes_plaintext.encode()) + encryptor.finalize()
             st.session_state['aes_ciphertext'] = (iv, ciphertext)
             st.success("Text encrypted successfully!")
-            st.write("Ciphertext (hex):", ciphertext.hex())
-            st.write("Initialization Vector (IV):", iv.hex())
+            st.write("**Ciphertext (hex):**", ciphertext.hex())
+            st.write("**Initialization Vector (IV):**", iv.hex())
         else:
-            st.error("Generate an AES key first!")
+            st.error("Please generate an AES key first!")
 
-    # Decryption
-    if st.button("Decrypt with AES"):
+    if st.button("Decrypt using AES"):
         if 'aes_ciphertext' in st.session_state and 'aes_key' in st.session_state:
             iv, ciphertext = st.session_state['aes_ciphertext']
             cipher = Cipher(algorithms.AES(st.session_state['aes_key']), modes.CFB(iv))
             decryptor = cipher.decryptor()
-            plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+            decrypted_text = decryptor.update(ciphertext) + decryptor.finalize()
             st.success("Ciphertext decrypted successfully!")
-            st.write("Decrypted Text:", plaintext.decode())
+            st.write("**Decrypted Text:**", decrypted_text.decode())
         else:
-            st.error("Encrypt a message first!")
+            st.error("Please encrypt a message first!")
+
 
 # DSA Section
 elif mode == "DSA Signing/Verification":
