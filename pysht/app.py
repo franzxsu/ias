@@ -101,23 +101,20 @@ elif mode == "RSA Encryption/Decryption":
 elif mode == "AES Encryption/Decryption":
     st.header("AES Encryption & Decryption")
 
-    # Generate AES Key
-    if 'aes_key' not in st.session_state:  # Check if key already exists
+    if 'aes_key' not in st.session_state: 
         if st.button("Generate AES Key"):
             aes_key = os.urandom(32)
             st.session_state['aes_key'] = aes_key
             st.success("AES key generated successfully!")
     
-    # Display AES Key permanently if it exists in session state
     if 'aes_key' in st.session_state:
         st.write("**AES Key (hex):**", st.session_state['aes_key'].hex())
 
-    # Input for encryption
     aes_plaintext = st.text_area("Enter plaintext for AES encryption:")
 
     if st.button("Encrypt using AES"):
         if 'aes_key' in st.session_state:
-            iv = os.urandom(16)  # Initialization Vector
+            iv = os.urandom(16)
             cipher = Cipher(algorithms.AES(st.session_state['aes_key']), modes.CFB(iv))
             encryptor = cipher.encryptor()
             ciphertext = encryptor.update(aes_plaintext.encode()) + encryptor.finalize()
