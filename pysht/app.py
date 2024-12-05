@@ -1,65 +1,193 @@
 import streamlit as st
-from crypto_utils import aes_encrypt, aes_decrypt, des_encrypt, des_decrypt, rsa_key_pair, rsa_encrypt, rsa_decrypt
+from cryptography.hazmat.primitives.asymmetric import rsa, dsa, padding
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
-from binascii import hexlify, unhexlify
 
 st.set_page_config(page_title="CryptoVault", layout="centered")
 
-# Header
-st.title("CryptoVault: Encryption and Decryption")
-st.write("Select an encryption method and enter your inputs.")
+# Title and Description
+st.title("CryptoVault")
+st.subheader("Secure your data with RSA, AES, and DSA algorithms")
+st.markdown("""
+This app provides functionalities to:
+- Generate RSA keys for encryption/decryption.
+- Use AES for symmetric encryption/decryption.
+- Utilize DSA for signing and verifying messages.
+""")
 
-# Encryption and Decryption Type Selection
-encryption_type = st.radio("Choose Encryption Type", ("AES", "DES", "RSA"))
-
-# Message Input
-message = st.text_input("Enter the message", placeholder="Type your message here")
-
-# AES or DES Key Input
-key = None
-if encryption_type in ["AES", "DES"]:
-    key = st.text_input(
-        f"Enter a {32 if encryption_type == 'AES' else 24}-character key",
-        max_chars=(32 if encryption_type == "AES" else 24),
+with st.sidebar:
+    st.header("Menu")
+    mode = st.radio(
+        "Choose operation:",
+        ["Home", "RSA Encryption/Decryption", "AES Encryption/Decryption", "DSA Signing/Verification"]
     )
 
-# RSA Key Pair
-rsa_private_key, rsa_public_key = None, None
-if encryption_type == "RSA":
+if mode == "Home":
+    st.header("Welcome to the Encryption/Decryption App!")
+    st.markdown("""
+    Navigate through the sidebar to explore features:
+    - **RSA**: Asymmetric encryption and decryption.
+    - **AES**: Symmetric encryption and decryption.
+    - **DSA**: Digital signing and verification.
+    """)
+
+# RSA Section
+elif mode == "RSA Encryption/Decryption":
+    st.header("RSA Encryption & Decryption")
+
     if st.button("Generate RSA Keys"):
-        rsa_private_key, rsa_public_key = rsa_key_pair()
-        st.success("RSA Keys generated successfully.")
-        st.write("**Public Key:**", rsa_public_key.export_key().decode())
-        st.write("**Private Key:**", rsa_private_key.export_key().decode())
+        rsa_private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
+        rsa_public_key = rsa_private_key.public_key()
 
-# Encrypt and Decrypt Buttons
-if st.button("Encrypt"):
-    if encryption_type == "AES" and message and key:
-        iv, ciphertext = aes_encrypt(message, key.encode())
-        st.text_area("Encrypted Message", value=hexlify(ciphertext).decode(), height=100)
-    elif encryption_type == "DES" and message and key:
-        iv, ciphertext = des_encrypt(message, key.encode())
-        st.text_area("Encrypted Message", value=hexlify(ciphertext).decode(), height=100)
-    elif encryption_type == "RSA" and message and rsa_public_key:
-        ciphertext = rsa_encrypt(message, rsa_public_key)
-        st.text_area("Encrypted Message", value=hexlify(ciphertext).decode(), height=100)
-    else:
-        st.error("Please provide all required inputs!")
+        st.session_state['rsa_private_key'] = rsa_private_key
+        st.session_state['rsa_public_key'] = rsa_public_key
+        st.success("RSA keys generated successfully!")
 
-if st.button("Decrypt"):
-    if encryption_type == "AES" and message and key:
-        ciphertext = unhexlify(st.text_input("Enter Encrypted Message (hex)", ""))
-        iv = os.urandom(16)  # Replace with saved IV in practice
-        plaintext = aes_decrypt(iv, ciphertext, key.encode())
-        st.text_area("Decrypted Message", value=plaintext, height=100)
-    elif encryption_type == "DES" and message and key:
-        ciphertext = unhexlify(st.text_input("Enter Encrypted Message (hex)", ""))
-        iv = os.urandom(8)  # Replace with saved IV in practice
-        plaintext = des_decrypt(iv, ciphertext, key.encode())
-        st.text_area("Decrypted Message", value=plaintext, height=100)
-    elif encryption_type == "RSA" and message and rsa_private_key:
-        ciphertext = unhexlify(st.text_input("Enter Encrypted Message (hex)", ""))
-        plaintext = rsa_decrypt(ciphertext, rsa_private_key)
-        st.text_area("Decrypted Message", value=plaintext, height=100)
-    else:
-        st.error("Please provide all required inputs!")
+    # Display RSA Keys
+    if 'rsa_private_key' in st.session_state:
+        private_pem = st.session_state['rsa_private_key'].private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        ).decode()
+
+        public_pem = st.session_state['rsa_public_key'].public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+
+        st.text_area("RSA Private Key:", private_pem, height=200)
+        st.text_area("RSA Public Key:", public_pem, height=200)
+
+    # Encryption
+    rsa_plaintext = st.text_area("Enter plaintext for RSA encryption:")
+    if st.button("Encrypt with RSA"):
+        if 'rsa_public_key' in st.session_state:
+            ciphertext = st.session_state['rsa_public_key'].encrypt(
+                rsa_plaintext.encode(),
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            st.session_state['rsa_ciphertext'] = ciphertext
+            st.success("Text encrypted successfully!")
+            st.write("Ciphertext (hex):", ciphertext.hex())
+        else:
+            st.error("Generate RSA keys first!")
+
+    # Decryption
+    if st.button("Decrypt with RSA"):
+        if 'rsa_private_key' in st.session_state and 'rsa_ciphertext' in st.session_state:
+            plaintext = st.session_state['rsa_private_key'].decrypt(
+                st.session_state['rsa_ciphertext'],
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            st.success("Ciphertext decrypted successfully!")
+            st.write("Decrypted Text:", plaintext.decode())
+        else:
+            st.error("Encrypt a message first!")
+
+# AES Section
+elif mode == "AES Encryption/Decryption":
+    st.header("🔑 AES Encryption & Decryption")
+
+    if st.button("Generate AES Key"):
+        aes_key = os.urandom(32)
+        st.session_state['aes_key'] = aes_key
+        st.success("AES key generated successfully!")
+        st.write("AES Key (hex):", aes_key.hex())
+
+    # Encryption
+    aes_plaintext = st.text_area("Enter plaintext for AES encryption:")
+    if st.button("Encrypt with AES"):
+        if 'aes_key' in st.session_state:
+            iv = os.urandom(16)
+            cipher = Cipher(algorithms.AES(st.session_state['aes_key']), modes.CFB(iv))
+            encryptor = cipher.encryptor()
+            ciphertext = encryptor.update(aes_plaintext.encode()) + encryptor.finalize()
+            st.session_state['aes_ciphertext'] = (iv, ciphertext)
+            st.success("Text encrypted successfully!")
+            st.write("Ciphertext (hex):", ciphertext.hex())
+            st.write("Initialization Vector (IV):", iv.hex())
+        else:
+            st.error("Generate an AES key first!")
+
+    # Decryption
+    if st.button("Decrypt with AES"):
+        if 'aes_ciphertext' in st.session_state and 'aes_key' in st.session_state:
+            iv, ciphertext = st.session_state['aes_ciphertext']
+            cipher = Cipher(algorithms.AES(st.session_state['aes_key']), modes.CFB(iv))
+            decryptor = cipher.decryptor()
+            plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+            st.success("Ciphertext decrypted successfully!")
+            st.write("Decrypted Text:", plaintext.decode())
+        else:
+            st.error("Encrypt a message first!")
+
+# DSA Section
+elif mode == "DSA Signing/Verification":
+    st.header("DSA Signing & Verification")
+
+    if st.button("Generate DSA Keys"):
+        dsa_private_key = dsa.generate_private_key(key_size=2048)
+        dsa_public_key = dsa_private_key.public_key()
+
+        st.session_state['dsa_private_key'] = dsa_private_key
+        st.session_state['dsa_public_key'] = dsa_public_key
+        st.success("DSA keys generated successfully!")
+
+    # Display DSA Keys
+    if 'dsa_private_key' in st.session_state:
+        private_pem = st.session_state['dsa_private_key'].private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        ).decode()
+
+        public_pem = st.session_state['dsa_public_key'].public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+
+        st.text_area("DSA Private Key:", private_pem, height=200)
+        st.text_area("DSA Public Key:", public_pem, height=200)
+
+    # Signing
+    dsa_message = st.text_area("Enter message for signing:")
+    if st.button("Sign with DSA"):
+        if 'dsa_private_key' in st.session_state:
+            signature = st.session_state['dsa_private_key'].sign(
+                dsa_message.encode(),
+                hashes.SHA256()
+            )
+            st.session_state['dsa_signature'] = signature
+            st.success("Message signed successfully!")
+            st.write("Signature (hex):", signature.hex())
+        else:
+            st.error("Generate DSA keys first!")
+
+    # Verification
+    dsa_signature_input = st.text_area("Enter signature (hex) for verification:")
+    if st.button("Verify with DSA"):
+        if 'dsa_public_key' in st.session_state:
+            try:
+                st.session_state['dsa_public_key'].verify(
+                    bytes.fromhex(dsa_signature_input),
+                    dsa_message.encode(),
+                    hashes.SHA256()
+                )
+                st.success("Signature is valid!")
+            except Exception as e:
+                st.error(f"Invalid signature: {e}")
+        else:
+            st.error("Generate DSA keys first!")
